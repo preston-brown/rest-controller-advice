@@ -1,0 +1,1 @@
+A simple rest controller with some unit tests showing which exceptions get thrown out of the box.
