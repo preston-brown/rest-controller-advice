@@ -63,7 +63,7 @@ public class MainControllerTest {
 
         ErrorResponseBody errorResponseBody = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), ErrorResponseBody.class);
 
-        ErrorResponseBody.ErrorResponseItem error = errorResponseBody.getErrors().getFirst();
+        ErrorResponseBody.ErrorResponseItem error = errorResponseBody.getErrors().get(0);
         assertNull(error.field());
         assertEquals("INVALID_RESOURCE", error.code());
         assertEquals(1, errorResponseBody.getErrors().size());
@@ -89,7 +89,7 @@ public class MainControllerTest {
 
         ErrorResponseBody errorResponseBody = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), ErrorResponseBody.class);
 
-        ErrorResponseBody.ErrorResponseItem error = errorResponseBody.getErrors().getFirst();
+        ErrorResponseBody.ErrorResponseItem error = errorResponseBody.getErrors().get(0);
         assertNull(error.field());
         assertEquals("UNSUPPORTED_TYPE", error.code());
         assertEquals(1, errorResponseBody.getErrors().size());
@@ -105,7 +105,7 @@ public class MainControllerTest {
 
         ErrorResponseBody errorResponseBody = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), ErrorResponseBody.class);
 
-        ErrorResponseBody.ErrorResponseItem error = errorResponseBody.getErrors().getFirst();
+        ErrorResponseBody.ErrorResponseItem error = errorResponseBody.getErrors().get(0);
         assertNull(error.field());
         assertEquals("METHOD_NOT_ALLOWED", error.code());
         assertEquals(1, errorResponseBody.getErrors().size());
@@ -124,7 +124,7 @@ public class MainControllerTest {
 
         ErrorResponseBody errorResponseBody = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), ErrorResponseBody.class);
 
-        ErrorResponseBody.ErrorResponseItem error = errorResponseBody.getErrors().getFirst();
+        ErrorResponseBody.ErrorResponseItem error = errorResponseBody.getErrors().get(0);
         assertEquals(expectedField, error.field());
         assertEquals(expectedCode, error.code());
         assertEquals(1, errorResponseBody.getErrors().size());
@@ -153,7 +153,7 @@ public class MainControllerTest {
 
         ErrorResponseBody errorResponseBody = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), ErrorResponseBody.class);
 
-        ErrorResponseBody.ErrorResponseItem error = errorResponseBody.getErrors().getFirst();
+        ErrorResponseBody.ErrorResponseItem error = errorResponseBody.getErrors().get(0);
         assertEquals(expectedField, error.field());
         assertEquals(expectedCode, error.code());
         assertEquals(1, errorResponseBody.getErrors().size());
@@ -185,6 +185,7 @@ public class MainControllerTest {
                 Arguments.of(extraProperty, status().isBadRequest(), "extra", "UNEXPECTED_PROPERTY"),
                 Arguments.of(missingIntegerValue, status().isUnprocessableEntity(), "id", "NotNull"),
                 Arguments.of(missingRequiredProperty, status().isUnprocessableEntity(), "name", "NotNull"));
+
     }
 
 }

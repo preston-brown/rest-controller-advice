@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,18 +22,23 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.stream.Collectors;
 
+/**
+ * This advice handles exceptions thrown by Spring's web layer during request processing.
+ * It covers situations such as:
+ * - no method found to handle the request
+ * - unable to convert some part of the request into the parameters the method expects
+ * - some part of the request failed validation after conversion
+ */
+
 @Slf4j
 @RestControllerAdvice
-public class GlobalRestControllerAdvice {
+@Order(1)
+public class ControllerAdviceAlfa {
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponseBody> handleException(Exception exception) {
-        log.error("Uncaught exception in rest controller", exception);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(ErrorResponseBody.globalError("INTERNAL_SERVER_ERROR"));
-    }
-
+    /**
+     * Thrown by Spring when a request has an unacceptable Accept header value.
+     * In our case this means they requested something other than application/json.
+     */
     @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
     public ResponseEntity<ErrorResponseBody> handleException(HttpMediaTypeNotAcceptableException exception) {
         log.debug("Handling exception in controller advice", exception);
@@ -41,6 +47,10 @@ public class GlobalRestControllerAdvice {
                 .body(ErrorResponseBody.globalError("UNSUPPORTED_TYPE", "The resource cannot return the requested content type."));
     }
 
+    /**
+     * Thrown by Spring when a request provides invalid content type.
+     * In our case, this means anything other than application/json.
+     */
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     public ResponseEntity<ErrorResponseBody> handleException(HttpMediaTypeNotSupportedException exception) {
         log.debug("Handling exception in controller advice", exception);
@@ -49,6 +59,13 @@ public class GlobalRestControllerAdvice {
                 .body(ErrorResponseBody.globalError("INVALID_CONTENT_TYPE", "The resource does not accept the provided content type."));
     }
 
+    /**
+     * Thrown by Spring when it is unable to deserialize the request body.
+     * In our case, it means the JSON in the request body did match up with the POJO we are trying to convert it to.
+     * <p>
+     * We look at exception.cause() for three specific issues and give them more specific error messages.
+     * Everything else gets "The request body is invalid" because we don't have anything better to tell them.
+     */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponseBody> handleException(HttpMessageNotReadableException exception) {
         log.debug("Handling exception in controller advice", exception);
@@ -75,6 +92,9 @@ public class GlobalRestControllerAdvice {
                 .body(ErrorResponseBody.globalError("INVALID_REQUEST_BODY", "The request body is invalid."));
     }
 
+    /**
+     * Thrown by Spring when a call is made to a valid resource with an HTTP verb that it doesn't support.
+     */
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ErrorResponseBody> handleException(HttpRequestMethodNotSupportedException exception) {
         log.debug("Handling exception in controller advice", exception);
@@ -83,6 +103,9 @@ public class GlobalRestControllerAdvice {
                 .body(ErrorResponseBody.globalError("METHOD_NOT_ALLOWED", "This method is not allowed for the requested resource."));
     }
 
+    /**
+     * Thrown by Spring when some property annotated with @Valid does not pass its validation.
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponseBody> handleException(MethodArgumentNotValidException exception) {
         log.debug("Handling exception in controller advice", exception);
@@ -91,6 +114,9 @@ public class GlobalRestControllerAdvice {
                 .body(ErrorResponseBody.fromErrors(exception));
     }
 
+    /**
+     * Thrown by Spring when a Path Variable or Query Parameter cannot be converted to the expected type.
+     */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponseBody> handleException(MethodArgumentTypeMismatchException exception) {
         log.debug("Handling exception in controller advice", exception);
@@ -106,6 +132,9 @@ public class GlobalRestControllerAdvice {
         }
     }
 
+    /**
+     * Thrown by Spring when it doesn't find a controller to handle a request.
+     */
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ErrorResponseBody> handleException(NoResourceFoundException exception) {
         log.debug("Handling exception in controller advice", exception);
